@@ -57,16 +57,18 @@ public class SqlSession implements InvocationHandler {
 			String sql = update.value();
 			String[] sqls = sql.split("}");// , 分割sql语句将#{ } 替换成 ?
 			String trueSql = "";
+			List<String> paramType=new ArrayList<String>();// Sql语句中的参数名列表
 			for (int i = 0; i < sqls.length; i++) {
 				// 找到# 找到}
 				int start = sqls[i].indexOf("#");
+				paramType.add(sqls[i].substring(start+2));// 将sql语句中参数放置到参数列表中
 				sqls[i] = sqls[i].substring(0, start) + "?";
 				trueSql += sqls[i];
 			}
 			List<Object> pa=new ArrayList<Object>();
 			Class<?> [] clss= method.getParameterTypes();
 			for(int i=0;i<clss.length;i++) {
-				pa=(List<Object>) createParams(clss[i], args[i]);
+				pa=(List<Object>) createParams(paramType,clss[i], args[i]);
 			}
 			System.out.println(trueSql);
 			int i=0;
@@ -84,14 +86,18 @@ public class SqlSession implements InvocationHandler {
 		return null;
 	}
 	
-	private <E>List<E> createParams(Class<E> cls,Object o){
+	/**
+	 * 设置参数
+	 * @param cls
+	 * @param o
+	 * @return
+	 */
+	private <E>List<E> createParams(List<String> paramType,Class<E> cls,Object o){
 		List<E> list=new ArrayList<E>();
-		Field [] fields = cls.getDeclaredFields();
 		Method[] methods = cls.getDeclaredMethods();
-		for(Field f:fields) {
-			String fieldName=f.getName();
+		for(String f:paramType) {
 			for (Method method : methods) {
-				if(("get"+fieldName).equalsIgnoreCase(method.getName())) {
+				if(("get"+f).equalsIgnoreCase(method.getName())) {
 					try {
 						list.add((E) method.invoke(o, null));
 					} catch (IllegalAccessException e) {
