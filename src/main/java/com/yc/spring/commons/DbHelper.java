@@ -95,15 +95,15 @@ public class DbHelper {
 	/**
 	 * 设置参数对象
 	 * @param pstmt	表示预编译的SQL语句的对象，解决了sql注入的问题
-	 * @param params	将参数放在list集合中方便使用,Object是因为不知道是什么数据类型所以使用，添加进来的参数的顺序必须和?顺序一致
+	 * @param args	将参数放在list集合中方便使用,Object是因为不知道是什么数据类型所以使用，添加进来的参数的顺序必须和?顺序一致
 	 * @throws SQLException 
 	 */
-	public void setParamterObject(PreparedStatement pstmt,List<Object> params) throws SQLException{
-		if(null==params ||params.size()<=0){	//PreparedStatement中无sql语句
+	public void setParamterObject(PreparedStatement pstmt,Object[] args) throws SQLException{
+		if(null==args ||args.length<=0){	//PreparedStatement中无sql语句
 			return;
 		}
-		for (int i = 0; i < params.size(); i++) {
-			pstmt.setObject(i+1, params.get(i));	
+		for (int i = 0; i < args.length; i++) {
+			pstmt.setObject(i+1, args[i]);	
 			//List中下标从0开始，PreparedStatement的setObject(parameterIndex, x)的方法中parameterIndex从1开始计数
 		}
 	}
@@ -116,7 +116,7 @@ public class DbHelper {
 	 * @return
 	 * @throws SQLException
 	 */
-	public int update(String sql,List<Object> params) throws SQLException{
+	public int update(String sql,Object[] params) throws SQLException{
 		int result=0;
 		try {
 			//获取连接对象
@@ -142,7 +142,7 @@ public class DbHelper {
 	 * @return
 	 * @throws SQLException 
 	 */
-	public int update(List<String> sqls,List< List<Object> > params) throws SQLException{
+	public int update(List<String> sqls,List< Object[] > params) throws SQLException{
 		int result=0;
 		try {
 			conn=getConn();
@@ -156,7 +156,7 @@ public class DbHelper {
 				//获取单个sql语句创建预编译对象
 				pstmt=conn.prepareStatement(sqls.get(i));
 				//获取对应sql语句参数
-				List<Object> param = params.get(i);
+				Object[] param = params.get(i);
 				//设置参数
 				setParamterObject(pstmt, param);
 				result=pstmt.executeUpdate();
@@ -186,7 +186,7 @@ public class DbHelper {
 	 * @return  返回对象集合
 	 * @throws Exception
 	 */
-	public <E>List<E> findMutil(String sql,List<Object> params,Class<E> cls) throws Exception{
+	public <E>List<E> findMutil(String sql,Object[] params,Class<E> cls) throws Exception{
 		List<E> list=new ArrayList<E>();
 		try {
 			conn=getConn();
@@ -265,7 +265,7 @@ public class DbHelper {
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public Map<String,Object> selectSingle(String sql,List<Object> params) throws Exception{
+	public Map<String,Object> selectSingle(String sql,Object[] params) throws Exception{
 		Map<String,Object> map=null;
 		try {
 			conn=getConn();
@@ -310,19 +310,19 @@ public class DbHelper {
 	/**
 	 * 返回多条记录
 	 * @param sql
-	 * @param params
+	 * @param args
 	 * @return List<Map<String , Object>> 
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public List<Map<String , Object>> selectMutil(String sql,List<Object> params) throws Exception{
+	public List<Map<String , Object>> selectMutil(String sql,Object[] args) throws Exception{
 		List<Map<String,Object>> list=new ArrayList<Map<String,Object>>();
 		Map<String,Object> map=null;
 		try {
 			conn=getConn();
 			pstmt=conn.prepareStatement(sql);
 			//设置参数
-			setParamterObject(pstmt, params);
+			setParamterObject(pstmt, args);
 			rs=pstmt.executeQuery();
 			//根据rs获取所有的列名
 			List<String> columnNames=getallColumnNames(rs);
@@ -384,7 +384,7 @@ public class DbHelper {
 	 * @return
 	 * @throws SQLException
 	 */
-	public double getPromer(String sql,List<Object> params) throws SQLException{
+	public double getPromer(String sql,Object[] params) throws SQLException{
 		double result=0;
 		try {
 			conn=getConn();
