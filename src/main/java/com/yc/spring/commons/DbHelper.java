@@ -181,6 +181,7 @@ public class DbHelper {
 	 * @throws Exception
 	 */
 	public <E>List<E> findMutil(String sql,Object[] params,Class<E> cls) throws Exception{
+		System.out.println(sql);
 		List<E> list=new ArrayList<E>();
 		try {
 			conn=getConn();

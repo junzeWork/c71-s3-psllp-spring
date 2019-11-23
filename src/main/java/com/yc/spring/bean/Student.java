@@ -13,7 +13,7 @@ public class Student {
 	private String name;
 	private int age;
 	private int grade;
-	private String sn;
+	private int sn;
 	
 	private List<String> hobbys;
 	
@@ -66,11 +66,11 @@ public class Student {
 		this.grade = grade;
 	}
 
-	public String getSn() {
+	public int getSn() {
 		return sn;
 	}
 
-	public void setSn(String sn) {
+	public void setSn(int sn) {
 		this.sn = sn;
 	}
 
@@ -80,6 +80,12 @@ public class Student {
 
 	public void setComputer(Computer computer) {
 		this.computer = computer;
+	}
+
+	@Override
+	public String toString() {
+		return "Student [name=" + name + ", age=" + age + ", grade=" + grade + ", sn=" + sn + ", hobbys=" + hobbys
+				+ ", computer=" + computer + "]";
 	}
 	
 }
