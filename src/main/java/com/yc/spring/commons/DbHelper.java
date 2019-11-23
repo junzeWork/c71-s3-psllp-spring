@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 //import java.sql.Blob;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -31,31 +32,24 @@ public class DbHelper {
 	private Connection conn=null;
 	private PreparedStatement pstmt=null;
 	private ResultSet rs=null;
-	private Context ctx=null;
-	private Context envContext=null;
-	private DataSource ds=null;
 	
-    public DbHelper(){
-    	try {
-			//初始化查找命名空间
-			ctx = new InitialContext();  
-			//参数java:/comp/env为固定路径   
-			envContext = (Context)ctx.lookup("java:/comp/env"); 
-			//参数jdbc/mysql为数据源和JNDI绑定的名字
-			ds = (DataSource)envContext.lookup("jdbc/mysql");
-		} catch (NamingException e) {
+	//加载驱动
+	static{
+		try {
+			Class.forName(MyProperties.getInstance().getProperty("driver"));
+		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    }
-    
+	}
+	
 	/**
 	 * 获取连接对象
 	 * @return
 	 * @throws SQLException
 	 */
 	public Connection getConn() throws SQLException{
-		conn =ds.getConnection();
+		conn = DriverManager.getConnection(MyProperties.getInstance().getProperty("url"),MyProperties.getInstance());
 		return conn;
 	}
 	
