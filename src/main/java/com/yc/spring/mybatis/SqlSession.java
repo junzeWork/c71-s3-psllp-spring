@@ -37,48 +37,51 @@ public class SqlSession implements InvocationHandler {
 	 * 7、注意：selectAll 返回的是泛型集合，泛型类型请通过下面的getGenericReturnType() 返回获取
 	 */
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-		if (null != method.getAnnotation(Select.class)) {
-			Select select = method.getAnnotation(Select.class);
-			String sql = select.value();
-			if (args == null) {
+		if (null != method.getAnnotation(Select.class)) {// 判断该方法上是否有Select注解  下同
+			Select select = method.getAnnotation(Select.class); // 获得注解
+			String sql = select.value();// 获得注解中的value值
+			if (args == null) {// 如果args为空 执行selectAll 如果不为空处理参数执行select
 				return db.findMutil(sql, null, getGenericReturnType(method));
 			}
-			String[] sqls = sql.split("}");// , 分割sql语句将#{ } 替换成 ?
-			String trueSql = "";
+			String[] sqls = sql.split("}");// } 分割sql语句将#{ } 替换成 ?
+			String trueSql = ""; // 处理完的sql
 			for (String str : sqls) {
 				// 找到# 找到}
 				int start = str.indexOf("#");
 				str = str.substring(0, start) + "?";
 				trueSql += str;
 			}
-			return db.findMutil(trueSql, args, method.getReturnType()).get(0);
-		} else if (null != method.getAnnotation(Update.class)) {
-			Update update = method.getAnnotation(Update.class);
-			String sql = update.value();
-			String[] sqls = sql.split("}");// , 分割sql语句将#{ } 替换成 ?
-			String trueSql = "";
+			List<?> result=db.findMutil(trueSql, args, method.getReturnType());
+			if(result.size()==1) {
+				return result.get(0);
+			}
+			return result;
+		} else if (null != method.getAnnotation(Update.class)) {// 同上
+			Update update = method.getAnnotation(Update.class);// 同上
+			String sql = update.value();// 同上
+			String[] sqls = sql.split("}");// } 分割sql语句将#{ } 替换成 ?
+			String trueSql = "";// 处理玩的sql
 			List<String> paramType=new ArrayList<String>();// Sql语句中的参数名列表
-			for (int i = 0; i < sqls.length; i++) {
-				// 找到# 找到}
+			for (int i = 0; i < sqls.length; i++) {// 找到# 之后留下#之前的东西--》age=  然后拼接上？--》age=？
 				int start = sqls[i].indexOf("#");
 				paramType.add(sqls[i].substring(start+2));// 将sql语句中参数放置到参数列表中
 				sqls[i] = sqls[i].substring(0, start) + "?";
 				trueSql += sqls[i];
 			}
-			List<Object> pa=new ArrayList<Object>();
+			List<Object> pa=new ArrayList<Object>();// 初始参数列表
 			Class<?> [] clss= method.getParameterTypes();
-			for(int i=0;i<clss.length;i++) {
+			for(int i=0;i<clss.length;i++) {// 循环参数类型数组  目前仅限于一种参数类型而且是对象(类似于Student这种)
 				pa=(List<Object>) createParams(paramType,clss[i], args[i]);
 			}
 			System.out.println(trueSql);
 			int i=0;
-			for (Object p : pa) {
+			for (Object p : pa) {// 获得数组长度（最终参数列表长度）
 				if(p!=null) {
 					i++;
 				}
 			}
 			Object [] params=new Object[i];
-			for(i=0;i<params.length;i++) {
+			for(i=0;i<params.length;i++) {// 获得最终参数列表
 				params[i]=pa.get(i);
 			}
 			return db.update(trueSql, params);
@@ -88,18 +91,19 @@ public class SqlSession implements InvocationHandler {
 	
 	/**
 	 * 设置参数
-	 * @param cls
-	 * @param o
+	 * @param paramType		sql语句中的参数列表
+	 * @param cls			方法参数类型（对象）
+	 * @param o				方法传入的参数（对象）
 	 * @return
 	 */
 	private <E>List<E> createParams(List<String> paramType,Class<E> cls,Object o){
 		List<E> list=new ArrayList<E>();
-		Method[] methods = cls.getDeclaredMethods();
+		Method[] methods = cls.getDeclaredMethods();// 获得所有的方法
 		for(String f:paramType) {
 			for (Method method : methods) {
-				if(("get"+f).equalsIgnoreCase(method.getName())) {
+				if(("get"+f).equalsIgnoreCase(method.getName())) { // 获得get方法
 					try {
-						list.add((E) method.invoke(o, null));
+						list.add((E) method.invoke(o, null));// 执行get方法，并把参数放置到list集合中
 					} catch (IllegalAccessException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
